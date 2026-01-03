@@ -9,7 +9,7 @@
   const DEFAULT_MODEL = 'gpt-oss-20b';
   const DEFAULT_SYSTEM_PROMPT = '';
 
-  // conversation messages stored as {role: 'system'|'user'|'assistant', content: '...'}
+  // 会話メッセージ（{role: 'system'|'user'|'assistant', content: '...' } の配列）
   const chatMessages = [];
 
   function appendBubble(text, who='ai', extraClass=''){
@@ -21,6 +21,7 @@
     return div;
   }
 
+  // HTML を直接挿入するバブル（すでに安全化済みのときに使う）
   function appendHTMLBubble(html, who='ai'){
     const div = document.createElement('div');
     div.className = `bubble ${who}`;
@@ -30,6 +31,7 @@
     return div;
   }
 
+  // Markdown を安全にレンダリングしてバブルに追加する
   function appendMarkdownBubble(markdown, who='ai'){
     try{
       const raw = (typeof marked !== 'undefined') ? marked.parse(markdown || '') : (markdown || '');
@@ -38,6 +40,31 @@
     }catch(e){
       return appendBubble(markdown, who);
     }
+  }
+
+  // 「回答を生成中…」のアニメーション付きインジケータを作成
+  function createTypingBubble(who='ai'){
+    const div = document.createElement('div');
+    div.className = `bubble ${who} typing`;
+    div.textContent = '回答を生成中';
+    let cnt = 0;
+    const iv = setInterval(()=>{
+      cnt = (cnt + 1) % 4; // 0..3
+      div.textContent = '回答を生成中' + '.'.repeat(cnt);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }, 400);
+    // 保持しておいて後でクリアできるようにする
+    div.__dotsInterval = iv;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  // 上で作った typing バブルを停止して削除する
+  function stopTypingBubble(el){
+    if(!el) return;
+    try{ if(el.__dotsInterval) clearInterval(el.__dotsInterval); }catch(e){}
+    try{ el.remove(); }catch(e){}
   }
 
   async function sendMessage(msg){
@@ -50,15 +77,15 @@
       return;
     }
 
-    // show user message
+    // ユーザーメッセージを画面に表示
     appendBubble(msg, 'user');
     inputEl.value = '';
     sendBtn.disabled = true;
 
-    // add user message to history
+    // 履歴にユーザーメッセージを追加
     chatMessages.push({role: 'user', content: msg});
 
-    // ensure system prompt is present as first message if provided
+    // システムプロンプトが指定されていれば先頭に入れる
     const systemPrompt = (systemEl && systemEl.value && systemEl.value.trim()) ? systemEl.value.trim() : DEFAULT_SYSTEM_PROMPT;
     if(systemPrompt){
       // if chatMessages doesn't already have system at index 0, unshift it
@@ -69,14 +96,14 @@
       }
     }
 
-    // typing indicator
-    const typing = appendBubble('typing...', 'ai', 'typing');
+    // 打ち込み中インジケータ（アニメーション付き）
+    const typing = createTypingBubble('ai');
 
     try{
       const model = (modelEl && modelEl.value) ? modelEl.value.trim() : DEFAULT_MODEL;
       const url = apiBase.replace(/\/$/, '') + '/v1/chat/completions';
 
-      // prepare a few payload candidates to match different server expectations
+      // サーバ互換のために複数のペイロード候補を用意
       const candidateMessages = chatMessages.map(m => ({ role: m.role, content: m.content }));
       const payloads = [];
       const base = {};
@@ -116,7 +143,8 @@
         break;
       }
 
-      typing.remove();
+      // インジケータを削除
+      stopTypingBubble(typing);
 
       if(!res){
         appendBubble('サーバへ接続できませんでした（ネットワークエラー）。', 'ai', 'error');
@@ -128,7 +156,7 @@
         return;
       }
 
-      // parse response
+      // レスポンスを解析
       let data;
       try{ data = JSON.parse(bodyText); }catch(e){ data = null; }
 
@@ -152,13 +180,13 @@
         reply = bodyText;
       }
 
-      // push assistant message to history
+      // アシスタントの応答を履歴に追加
       chatMessages.push({role:'assistant', content: reply});
       // render assistant reply as Markdown
       appendMarkdownBubble(reply, 'ai');
 
     }catch(err){
-      typing.remove();
+      stopTypingBubble(typing);
       appendBubble('エラー: ' + err.message, 'ai', 'error');
     }finally{
       sendBtn.disabled = false;
@@ -166,11 +194,22 @@
     }
   }
 
+  // フォーム送信（送信ボタン押下など）
   inputForm.addEventListener('submit', (e)=>{
     e.preventDefault();
     const v = inputEl.value.trim();
     if(!v) return;
     sendMessage(v);
+  });
+
+  // キーボードのショートカット: Shift+Enter で送信する
+  inputEl.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && e.shiftKey){
+      e.preventDefault();
+      const v = inputEl.value.trim();
+      if(!v) return;
+      sendMessage(v);
+    }
   });
 
   // initial prompt

@@ -67,6 +67,42 @@
     try{ el.remove(); }catch(e){}
   }
 
+  // Wikipedia からサマリを取得するヘルパー
+  async function fetchWikiSummary(query){
+    if(!query || !query.trim()) return null;
+    try{
+      const s = encodeURIComponent(query.trim());
+      // opensearch で候補を1件取得（CORS のため origin=* を付与）
+      const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${s}&limit=1&namespace=0&format=json&origin=*`;
+      const r1 = await fetch(searchUrl);
+      if(!r1.ok) return null;
+      const d1 = await r1.json();
+      if(!d1 || !Array.isArray(d1) || !d1[1] || !d1[1].length) return null;
+      const title = d1[1][0];
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+      const r2 = await fetch(summaryUrl);
+      if(!r2.ok) return null;
+      const j = await r2.json();
+      return {
+        title: j.title || title,
+        extract: j.extract || '',
+        url: (j.content_urls && j.content_urls.desktop && j.content_urls.desktop.page) ? j.content_urls.desktop.page : (`https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`)
+      };
+    }catch(e){
+      return null;
+    }
+  }
+
+  // Wikipedia サマリを安全に表示する HTML を作る
+  function renderWikiBox(obj){
+    if(!obj) return '';
+    const title = obj.title || '';
+    const extract = obj.extract || '';
+    const url = obj.url || '#';
+    const raw = `<div class="wiki-helper"><strong>補助情報 — Wikipedia: ${title}</strong><p>${extract}</p><p><a href="${url}" target="_blank" rel="noopener">続きを読む</a></p></div>`;
+    return (typeof DOMPurify !== 'undefined') ? DOMPurify.sanitize(raw) : raw;
+  }
+
   async function sendMessage(msg){
     const apiBase = (apiBaseEl && apiBaseEl.value) ? apiBaseEl.value.trim() : DEFAULT_API_BASE;
     const modelEl = document.getElementById('model');
@@ -84,6 +120,18 @@
 
     // 履歴にユーザーメッセージを追加
     chatMessages.push({role: 'user', content: msg});
+
+    // 補助情報: Wikipedia のサマリを取得して表示（存在すれば）
+    try{
+      const wiki = await fetchWikiSummary(msg);
+      if(wiki && wiki.extract){
+        const wikiHtml = renderWikiBox(wiki);
+        appendHTMLBubble(wikiHtml, 'ai');
+      }
+    }catch(e){
+      // 補助情報が取れなくても処理は継続
+      console.debug('wiki fetch failed', e);
+    }
 
     // システムプロンプトが指定されていれば先頭に入れる
     const systemPrompt = (systemEl && systemEl.value && systemEl.value.trim()) ? systemEl.value.trim() : DEFAULT_SYSTEM_PROMPT;

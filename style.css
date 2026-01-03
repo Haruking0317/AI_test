@@ -1,6 +1,6 @@
 *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,'Noto Sans JP',sans-serif}
 body{margin:0;background:#f4f7fb;color:#0b1220}
-.app{max-width:980px;width:calc(100% - 48px);margin:28px auto;padding:18px;border-radius:12px;background:#ffffff;box-shadow:0 10px 30px rgba(16,24,40,0.08)}
+.app{max-width:1200px;width:calc(100% - 160px);margin:36px auto;padding:22px;border-radius:12px;background:#ffffff;box-shadow:0 10px 30px rgba(16,24,40,0.08)}
 header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 header h1{margin:0;font-size:18px;font-weight:700;color:#0b1220}
 .config{margin-bottom:14px;display:flex;gap:8px;align-items:center}
@@ -8,8 +8,8 @@ header h1{margin:0;font-size:18px;font-weight:700;color:#0b1220}
 .config input,.config textarea{padding:8px;border-radius:8px;border:1px solid #e6eef8;background:#fbfdff;color:#0b1220;min-width:160px}
 .config textarea{resize:vertical}
 .config small.hint{display:none}
-.messages{min-height:360px;max-height:64vh;overflow:auto;padding:18px;border-radius:10px;background:linear-gradient(180deg,#fbfdff,#f4f7fb);display:flex;flex-direction:column;gap:12px;border:1px solid #eef3f8}
-.bubble{max-width:86%;padding:12px 16px;border-radius:14px;line-height:1.45;box-shadow:0 2px 6px rgba(11,17,32,0.04)}
+.messages{min-height:640px;max-height:72vh;overflow:auto;padding:22px;border-radius:10px;background:linear-gradient(180deg,#fbfdff,#f4f7fb);display:flex;flex-direction:column;gap:16px;border:1px solid #eef3f8}
+.bubble{max-width:80%;padding:14px 18px;border-radius:14px;line-height:1.45;box-shadow:0 2px 6px rgba(11,17,32,0.04)}
 .bubble.user{align-self:flex-end;background:linear-gradient(90deg,#0b61ff,#0066ff);color:#fff;border-bottom-right-radius:6px}
 .bubble.ai{align-self:flex-start;background:#f1f5f9;color:#0b1220;border-bottom-left-radius:6px}
 .input-form{display:flex;gap:8px;margin-top:12px}
@@ -19,6 +19,13 @@ header h1{margin:0;font-size:18px;font-weight:700;color:#0b1220}
 .typing{font-style:italic;color:#64748b}
 .error{color:#7f1d1d;background:rgba(255,230,230,0.8);padding:8px;border-radius:8px}
 @media (max-width:520px){.app{margin:12px;padding:12px}.bubble{max-width:96%}}
+
+/* 大きなディスプレイ向け調整 (例: 1920x1080) */
+@media (min-width:1600px){
+	.app{max-width:1400px;width:calc(100% - 320px);padding:28px}
+	.messages{min-height:720px;max-height:78vh;padding:26px}
+	.bubble{max-width:76%}
+}
 
 /* small helper to make UI feel more "AI" */
 .messages .bubble.ai{border-left:4px solid #e6eef8}

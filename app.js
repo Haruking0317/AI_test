@@ -6,7 +6,7 @@
   const sendBtn = document.getElementById('sendBtn');
 
   const DEFAULT_API_BASE = 'http://127.0.0.1:1234';
-  const DEFAULT_MODEL = 'gpt-4o-mini';
+  const DEFAULT_MODEL = 'gpt-oss-20b';
   const DEFAULT_SYSTEM_PROMPT = '';
 
   // conversation messages stored as {role: 'system'|'user'|'assistant', content: '...'}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Local AI Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Local AI Chat</h1>
+    </header>
+
+    
+
+    <main>
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <form id="inputForm" class="input-form">
+        <textarea id="input" placeholder="メッセージを入力..." required></textarea>
+        <button id="sendBtn" type="submit">送信</button>
+      </form>
+    </main>
+
+    <footer class="note">ローカルサーバに接続して動作します。</footer>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
